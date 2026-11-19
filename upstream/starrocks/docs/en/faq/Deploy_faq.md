@@ -1,0 +1,156 @@
+---
+sidebar_position: 10
+displayed_sidebar: docs
+description: "FAQ for common StarRocks deployment questions."
+products: [oss, enterprise]
+---
+
+# Deployment
+
+This topic provides answers to some frequently asked questions about deployment.
+
+## How do I bind a fixed IP address with the `priority_networks` parameter in the `fe.conf` file?
+
+### Problem description
+
+For example, if you have two IP addresses: 192.168.108.23 and 192.168.108.43. You might provide IP addresses as follows:
+
+- If you specify the addresses as 192.168.108.23/24, StarRocks will recognize them as 192.168.108.43.
+- If you specify the addresses as 192.168.108.23/32, StarRocks will recognize them as 127.0.0.1.
+
+### Solution
+
+There are the following two ways to solve this problem:
+
+- Do not add "32" at the end of an IP address or change "32" to "28".
+- You can also upgrade to StarRocks 2.1 or later.
+
+## Why does the error "StarRocks BE http service did not start correctly, exiting" occur when I start a backend (BE) after installation?
+
+When installing a BE, the system reports a startup error: StarRocks Be http service did not start correctly, exiting.
+
+This error occurs because the web services port of the BE is occupied. Try to modify the ports in the `be.conf` file and restart the BE.
+
+## What do I do when the error occurs: ERROR 1064 (HY000): Could not initialize class com.starrocks.rpc.BackendServiceProxy?
+
+This error occurs when you run programs in Java Runtime Environment (JRE). To solve this problem, replace JRE with Java Development Kit (JDK). We recommend that you use Oracle's JDK 17 or later.
+
+## Can FE and BE configuration items be modified and then take effect without restarting the cluster?
+
+Yes. Perform the following steps to complete the modifications for an FE and a BE configuration item:
+
+- FE: You can complete the modification for an FE in one of the following ways:
+  - SQL
+
+  ```plaintext
+  ADMIN SET FRONTEND CONFIG ("key" = "value");
+  ```
+
+  Example:
+
+  ```plaintext
+  ADMIN SET FRONTEND CONFIG ("enable_statistic_collect" = "false");
+  ```
+
+  - Shell
+
+  ```plaintext
+  curl --location-trusted -u username:password \
+  http://<ip>:<fe_http_port/api/_set_config?key=value>
+  ```
+
+  Example:
+
+  ```plaintext
+  curl --location-trusted -u <username>:<password> \
+  http://192.168.110.101:8030/api/_set_config?enable_statistic_collect=true
+  ```
+
+- BE: You can complete the modification for a BE in the following way:
+
+```plaintext
+curl -XPOST -u username:password \
+http://<ip>:<be_http_port>/api/update_config?key=value
+```
+
+> Note: Make sure that the user has permission to log in remotely. If not, you can grant the permission to the user in the following way:
+
+```plaintext
+CREATE USER 'test'@'%' IDENTIFIED BY '123456';
+
+GRANT SELECT ON . TO 'test'@'%';
+```
+
+## Why does the error "Fe type:unknown ,is ready :false." occur when I start an FE during the cluster restart?
+
+Check if the leader FE is running. If not, restart the FE nodes in your cluster one by one.
+
+## Why does the error "failed to get service info err." occur when I deploy the cluster?
+
+Check if OpenSSH Daemon (sshd) is enabled. If not, run the `/etc/init.d/sshd`` status` command to enable it.
+
+## Why does the error "Fail to get master client from `cache. ``host= port=0 code=THRIFT_RPC_ERROR`" occur when I start a BE?
+
+Run the `netstat -anp |grep port` command to check whether the ports in the `be.conf` file are occupied. If so, replace the occupied port with a free port and then restart the BE.
+
+## Why does the FE node log on the diagnostics page of StarRocks Manager display "Search log failed." for a newly deployed FE node that is running properly?
+
+ By default, StarRocks Manager obtains the path configuration of the newly deployed FE within 30 seconds. This error occurs when the FE starts slowly or does not respond within 30 seconds due to other reasons. Check the log of Manager Web via the path:
+
+`/starrocks-manager-xxx/center/log/webcenter/log/web/``drms.INFO`(you can customize the path). Then find that whether the message "Failed to update FE configurations" display in the log. If so, restart the corresponding FE to obtain the new path configuration.
+
+## Why does the error "exceeds max permissable delta:5000ms." occur when I start an FE?
+
+This error occurs when the time difference between two machines is more than 5s. To solve this problem, align the time of these two machines.
+
+## How do I set the `storage_root_path` parameter if there are multiple disks in a BE for data storage?
+
+Configure the `storage_root_path` parameter in the `be.conf` file and separate values of this parameter with `;`. For example: `storage_root_path=/the/path/to/storage1;/the/path/to/storage2;/the/path/to/storage3;`
+
+## Why does the error "invalid cluster id: 209721925." occur after an FE is added to my cluster?
+
+If you do not add the `--helper` option for this FE when starting your cluster for the first time, the metadata between two machines is inconsistent, thus this error occurs. To solve this problem, you need to   clear all metadata under the meta directory and then add an FE with the `--helper` option.
+
+## Why Alive is `false` when an FE is running and prints log `transfer: follower`?
+
+This issue occurs when more than half of memory of Java Virtual Machine (JVM) is used and no checkpoint is marked. In general, a checkpoint will be marked after the system accumulates 50,000 pieces of log. We recommend that you modify the JVM's parameters of each FE and restarting these FEs when they are not heavily loaded.
+
+## Query error: “could not initialize class com.starrocks.rpc.BackendServiceProxy”. How do I resolve this?
+
+- Verify that the environment variable `$JAVA_HOME` points to the correct JDK path.
+- Ensure all nodes use the same JDK version. All nodes must use the identical JDK version.
+
+## What are the MySQL version requirements for installing StarRocks?
+
+MySQL 5.7 or later is recommended to connect to StarRocks.
+
+## If FE and BE are deployed on the same machine, how can I separate them?
+
+It is recommended to scale out a BE node first. After the cluster finishes balancing, you can then scale in the original BE node.
+
+## What should I do when FE fails to start with the error “Replica exceeds max permissible delta:5000ms”?
+
+The clocks between FE nodes are not synchronized. The time difference between FE nodes must be less than 5 seconds.
+
+## If I have five physical machines in a production environment, what is the recommended StarRocks deployment?
+
+A recommended deployment is 3 FE nodes and 5 BE nodes.
+
+## Should I use the root user to install StarRocks?
+
+It is not recommended to use the root user because it has excessive privileges. Create a dedicated user for installing StarRocks.
+
+## Can I install the MySQL client on any machine?
+
+Yes. It is simply a client tool and does not need to run on the same machine as StarRocks. Make sure the MySQL client can access the cluster.
+
+## Is there a limit to the number of tablets on a BE node? For example, for a server with 64 GB RAM and 16 cores, what is the reasonable range of tablet count?
+There is no strict limit for the tablet number. However, for the tablet size, it is recommended to keep each tablet around 1 GB. For shared-data clusters of v4.1 or later, which support large-capacity tablets, it is recommended to keep each tablet between 10 GB and 50 GB, and no more than 100 GB. Proper partitioning and bucketing strategies will help improve query performance. Tablet size planning is important.
+
+## When starting BE, I see the error “error while loading shared libraries: libjvm.so: cannot open shared object file: No such file or directory”. And after manually creating the directory `lib/starrocks_be`, I get a permission denied error. What should I do?
+
+There is an issue with the JDK installation. Please reinstall and properly configure your JDK environment.
+
+## Does StarRocks support running on AMD AVX2? Will mixing Intel and AMD servers cause problems?
+
+StarRocks can run on AMD. Mixing Intel and AMD servers is not recommended because hardware heterogeneity may cause issues. It is suggested to fully test StarRocks on AMD before migrating.

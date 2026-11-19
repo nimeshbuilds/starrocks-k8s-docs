@@ -1,0 +1,40 @@
+---
+displayed_sidebar: docs
+description: "CHAR() returns the character value of the given integer value according to the ASCII table."
+products: [oss, enterprise, cloud, anywhere]
+---
+
+# char 
+
+
+
+CHAR() returns the character value of the given integer value according to the ASCII table.
+
+## Syntax
+
+```plaintext
+char(n)
+```
+
+## Parameters
+
+- `n`: integer value
+
+## Return value
+
+Returns a VARCHAR value.
+
+## Examples
+
+```Plain Text
+> select char(77);
++----------+
+| char(77) |
++----------+
+| M        |
++----------+
+```
+
+## keyword
+
+CHAR

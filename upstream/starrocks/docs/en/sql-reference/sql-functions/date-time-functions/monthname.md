@@ -1,0 +1,34 @@
+---
+displayed_sidebar: docs
+description: "Returns the name of the month for a given date."
+products: [oss, enterprise, cloud, anywhere]
+---
+
+# monthname
+
+
+
+Returns the name of the month for a given date.  
+
+The `date` parameter must be of the DATE or DATETIME type.
+
+## Syntax
+
+```plaintext
+VARCHAR MONTHNAME(date)
+```
+
+## Examples
+
+```Plain Text
+MySQL > select monthname('2008-02-03 00:00:00');
++----------------------------------+
+| monthname('2008-02-03 00:00:00') |
++----------------------------------+
+| February                         |
++----------------------------------+
+```
+
+## keyword
+
+MONTHNAME, monthname

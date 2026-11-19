@@ -1,0 +1,32 @@
+---
+displayed_sidebar: docs
+description: "Converts all strings in an argument to lower-case."
+products: [oss, enterprise, cloud, anywhere]
+---
+
+# lower
+
+
+
+Converts all strings in an argument to lower-case.
+
+## Syntax
+
+```plaintext
+INT lower(VARCHAR str)
+```
+
+## Examples
+
+```Plain Text
+MySQL > SELECT lower("AbC123");
++-----------------+
+| lower('AbC123') |
++-----------------+
+| abc123          |
++-----------------+
+```
+
+## keyword
+
+LOWER

@@ -1,0 +1,61 @@
+---
+displayed_sidebar: docs
+description: "ALTER STORAGE VOLUME alters the credential properties, comment, or status (enabled) of a storage volume."
+products: [oss, enterprise, cloud, anywhere]
+---
+
+# ALTER STORAGE VOLUME
+
+ALTER STORAGE VOLUME alters the credential properties, comment, or status (`enabled`) of a storage volume. For more about the properties of a storage volume, see [CREATE STORAGE VOLUME](CREATE_STORAGE_VOLUME.md). This feature is supported from v3.1.
+
+> **CAUTION**
+>
+> - Only users with the ALTER privilege on a specific storage volume can perform this operation.
+> - The `TYPE` and `LOCATIONS` of an existing storage volume, and the properties `aws.s3.enable_partitioned_prefix` and `aws.s3.num_partitioned_prefix`, cannot be altered. StarRocks does not block changes to other properties such as the endpoint or region, and the new values apply to all existing databases and tables that use the storage volume. Alter these properties only to access the same storage, for example, to rotate credentials. If the new values point to different storage, the data of the existing databases and tables becomes inaccessible.
+> - When `enabled` is `false`, the corresponding storage volume cannot be referenced.
+> - In shared-data mode, StarRocks performs a storage accessibility check during `ALTER STORAGE VOLUME` only when the `enable_storage_volume_access_check` configuration is enabled (enabled by default). If this check is enabled and the updated credentials or endpoint cannot access remote storage, the statement fails. You can turn off this check by disabling `enable_storage_volume_access_check`.
+
+## Syntax
+
+```SQL
+ALTER STORAGE VOLUME [ IF EXISTS ] <storage_volume_name>
+{ COMMENT = '<comment_string>'
+| SET ("key" = "value"[,...]) }
+```
+
+## Parameters
+
+| **Parameter**       | **Description**                          |
+| ------------------- | ---------------------------------------- |
+| storage_volume_name | The name of the storage volume to alter. |
+| COMMENT             | The comment on the storage volume.       |
+
+For detailed information on the properties that can be altered or added, see [CREATE STORAGE VOLUME - PROPERTIES](CREATE_STORAGE_VOLUME.md#properties).
+
+## Examples
+
+Example 1: Disable the storage volume `my_s3_volume`.
+
+```Plain
+MySQL > ALTER STORAGE VOLUME my_s3_volume
+    -> SET ("enabled" = "false");
+Query OK, 0 rows affected (0.01 sec)
+```
+
+Example 2: Alter the credential information of the storage volume `my_s3_volume`.
+
+```Plain
+MySQL > ALTER STORAGE VOLUME my_s3_volume
+    -> SET (
+    ->     "aws.s3.use_instance_profile" = "true"
+    -> );
+Query OK, 0 rows affected (0.00 sec)
+```
+
+## Relevant SQL statements
+
+- [CREATE STORAGE VOLUME](CREATE_STORAGE_VOLUME.md)
+- [DROP STORAGE VOLUME](DROP_STORAGE_VOLUME.md)
+- [SET DEFAULT STORAGE VOLUME](SET_DEFAULT_STORAGE_VOLUME.md)
+- [DESC STORAGE VOLUME](DESC_STORAGE_VOLUME.md)
+- [SHOW STORAGE VOLUMES](SHOW_STORAGE_VOLUMES.md)

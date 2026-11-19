@@ -1,0 +1,32 @@
+---
+displayed_sidebar: docs
+description: "Returns a date from 0000-01-01."
+products: [oss, enterprise, cloud, anywhere]
+---
+
+# from_days
+
+
+
+Returns a date from 0000-01-01.
+
+## Syntax
+
+```plaintext
+DATE FROM_DAYS(INT N)
+```
+
+## Examples
+
+```Plain Text
+MySQL > select from_days(730669);
++-------------------+
+| from_days(730669) |
++-------------------+
+| 2000-07-03        |
++-------------------+
+```
+
+## keyword
+
+FROM_DAYS,FROM,DAYS

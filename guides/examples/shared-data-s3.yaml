@@ -1,0 +1,201 @@
+# Shared-data StarRocks cluster on S3: 3 FE + 3 CN.
+#
+# This is an original example written for this repository. It is a starting
+# point, not a tested production manifest. Replace every <placeholder>.
+#
+# Before applying:
+#   1. Install the operator and CRD.          See guides/02-install-operator.md
+#   2. Create the namespace.
+#   3. Create ServiceAccount "starrocks-sa" bound to an IAM role that can
+#      read and write the bucket.             See guides/09-security.md
+#   4. Create Secret "rootcredential" with key "password" if you will set a
+#      root password (recommended).           See guides/09-security.md
+#
+# Apply with:  kubectl apply -f shared-data-s3.yaml
+---
+apiVersion: starrocks.com/v1
+kind: StarRocksCluster
+metadata:
+  name: sr
+  namespace: starrocks
+spec:
+  # Finish the FE rollout before BE/CN are updated.
+  waitForFullRollout: true
+
+  starRocksFeSpec:
+    image: starrocks/fe-ubuntu:<version>      # pin an exact version
+    replicas: 3
+    requests:
+      cpu: 8
+      memory: 16Gi
+    limits:
+      cpu: 8
+      memory: 16Gi
+    serviceAccount: starrocks-sa
+    runAsNonRoot: true
+    configMapInfo:
+      configMapName: sr-fe-cm
+      resolveKey: fe.conf
+    feEnvVars:
+      - name: TZ
+        value: UTC
+      - name: LOG_CONSOLE
+        value: "1"
+      # Uncomment after a root password has been set.
+      # - name: MYSQL_PWD
+      #   valueFrom:
+      #     secretKeyRef:
+      #       name: rootcredential
+      #       key: password
+    storageVolumes:
+      - name: fe-meta
+        storageClassName: <storage-class>
+        storageSize: 100Gi
+        mountPath: /opt/starrocks/fe/meta
+      - name: fe-log
+        storageClassName: <storage-class>
+        storageSize: 10Gi
+        mountPath: /opt/starrocks/fe/log
+    # One FE per node, so a single node failure cannot break the quorum.
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values: ["fe"]
+            topologyKey: kubernetes.io/hostname
+    terminationGracePeriodSeconds: 120
+    service:
+      type: ClusterIP
+
+  starRocksCnSpec:
+    image: starrocks/cn-ubuntu:<version>
+    replicas: 3                               # remove when using autoScalingPolicy
+    requests:
+      cpu: 16
+      memory: 64Gi
+    limits:
+      cpu: 16
+      memory: 64Gi
+    serviceAccount: starrocks-sa
+    runAsNonRoot: true
+    configMapInfo:
+      configMapName: sr-cn-cm
+      resolveKey: cn.conf
+    cnEnvVars:
+      - name: TZ
+        value: UTC
+      - name: LOG_CONSOLE
+        value: "1"
+      # - name: MYSQL_PWD
+      #   valueFrom:
+      #     secretKeyRef:
+      #       name: rootcredential
+      #       key: password
+    # All CNs in a shared-data cluster must have the same hardware.
+    # nodeSelector:
+    #   node.kubernetes.io/instance-type: <instance-type>
+    storageVolumes:
+      - name: cn-log
+        storageClassName: <storage-class>
+        storageSize: 20Gi
+        mountPath: /opt/starrocks/cn/log
+      # Cache volume. Pick ONE option, or none. See guides/06-storage.md
+      #
+      # Option A: local NVMe on the node
+      # - name: cn-cache
+      #   storageClassName: hostPath
+      #   hostPath:
+      #     path: <path-on-node>
+      #   mountPath: /opt/starrocks/cn/storage
+      #
+      # Option B: a PVC
+      # - name: cn-data
+      #   storageClassName: <storage-class>
+      #   storageSize: 500Gi
+      #   mountPath: /opt/starrocks/cn/storage
+    persistentVolumeClaimRetentionPolicy:
+      whenScaled: Delete
+    terminationGracePeriodSeconds: 120
+
+    # Autoscaling. If you enable this, delete `replicas` above.
+    # autoScalingPolicy:
+    #   version: v2
+    #   minReplicas: 2
+    #   maxReplicas: 10
+    #   hpaPolicy:
+    #     metrics:
+    #       - type: Resource
+    #         resource:
+    #           name: cpu
+    #           target:
+    #             type: Utilization
+    #             averageUtilization: 60
+    #     behavior:
+    #       scaleUp:
+    #         policies:
+    #           - type: Pods
+    #             value: 2
+    #             periodSeconds: 60
+    #       scaleDown:
+    #         policies:
+    #           - type: Pods
+    #             value: 1
+    #             periodSeconds: 120
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sr-fe-cm
+  namespace: starrocks
+data:
+  fe.conf: |
+    LOG_DIR = ${STARROCKS_HOME}/log
+    DATE = "$(date +%Y%m%d-%H%M%S)"
+    # Keep -Xmx below the FE memory limit, with room for off-heap use.
+    JAVA_OPTS="-Dlog4j2.formatMsgNoLookups=true -Xmx12g -XX:+UseG1GC -Xlog:gc*:${LOG_DIR}/fe.gc.log.$DATE:time"
+    http_port = 8030
+    rpc_port = 9020
+    query_port = 9030
+    edit_log_port = 9010
+    mysql_service_nio_enabled = true
+    sys_log_level = INFO
+
+    # Graceful shutdown (StarRocks 3.4.2 or later)
+    min_graceful_exit_time_second = 25
+
+    # Shared-data mode
+    run_mode = shared_data
+    cloud_native_meta_port = 6090
+    cloud_native_storage_type = S3
+    enable_load_volume_from_conf = true
+    aws_s3_path = <bucket>/<prefix>
+    aws_s3_region = <region>
+    # Use the pod's IAM role through the AWS SDK credential chain.
+    aws_s3_use_aws_sdk_default_behavior = true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sr-cn-cm
+  namespace: starrocks
+data:
+  cn.conf: |
+    sys_log_level = INFO
+    be_port = 9060
+    be_http_port = 8040
+    heartbeat_service_port = 9050
+    brpc_port = 8060
+
+    # Cache directory. Must match the cache volume's mountPath.
+    # Leave empty to run with no local disk cache:
+    #   storage_root_path =
+    storage_root_path = /opt/starrocks/cn/storage
+
+    # Uncomment to disable the disk block cache but keep the memory page cache.
+    # block_cache_enable = false
+
+    # Uncomment if you enable spill and mount a spill volume.
+    # spill_local_storage_dir = /opt/starrocks/cn/spill

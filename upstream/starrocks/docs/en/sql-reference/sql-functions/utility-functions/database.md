@@ -1,0 +1,44 @@
+---
+displayed_sidebar: docs
+description: "Returns the name of the current database."
+products: [oss, enterprise, cloud, anywhere]
+---
+
+# database
+
+
+
+Returns the name of the current database. If no database is selected, an empty value is returned.
+
+## Syntax
+
+```plaintext
+database()
+```
+
+## Parameters
+
+This function does not require parameters.
+
+## Return value
+
+Returns the name of the current database as a string.
+
+## Examples
+
+```sql
+-- Select a destination database.
+use db_test
+
+-- Query the name of the current database.
+select database();
++------------+
+| DATABASE() |
++------------+
+| db_test    |
++------------+
+```
+
+## See also
+
+[USE](../../sql-statements/Database/USE.md): Switches to a destination database.

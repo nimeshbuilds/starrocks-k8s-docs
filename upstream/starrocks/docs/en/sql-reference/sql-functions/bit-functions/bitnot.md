@@ -1,0 +1,36 @@
+---
+displayed_sidebar: docs
+description: "Returns the bitwise negation of a numeric expression."
+products: [oss, enterprise, cloud, anywhere]
+---
+
+# bitnot
+
+
+
+Returns the bitwise negation of a numeric expression.
+
+## Syntax
+
+```plaintext
+BITNOT(x);
+```
+
+## Parameters
+
+`x`: This expression must evaluate to any of the following data types: TINYINT, SMALLINT, INT, BIGINT, LARGEINT.
+
+## Return value
+
+The return value has the same type as `x`. If any value is NULL, the result is NULL.
+
+## Examples
+
+```Plain Text
+mysql> select bitnot(3);
++-----------+
+| bitnot(3) |
++-----------+
+|        -4 |
++-----------+
+```

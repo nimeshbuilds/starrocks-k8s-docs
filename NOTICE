@@ -1,0 +1,38 @@
+StarRocks on Kubernetes: documentation
+Licensed under the Apache License, Version 2.0.
+
+This repository redistributes documentation from the following projects.
+The redistributed files are unmodified and are located under upstream/.
+See PROVENANCE.md for source commits and paths.
+
+------------------------------------------------------------------------
+StarRocks
+https://github.com/StarRocks/starrocks
+Copyright 2021-present StarRocks, Inc.
+Licensed under the Apache License, Version 2.0.
+Files: upstream/starrocks/docs/en/
+The upstream LICENSE.txt and NOTICE.txt are reproduced in upstream/starrocks/.
+
+------------------------------------------------------------------------
+StarRocks Kubernetes Operator
+https://github.com/StarRocks/starrocks-kubernetes-operator
+Copyright StarRocks, Inc. and contributors.
+Licensed under the Apache License, Version 2.0.
+Files: upstream/starrocks-kubernetes-operator/
+The upstream LICENSE is reproduced in upstream/starrocks-kubernetes-operator/.
+
+------------------------------------------------------------------------
+Data on EKS
+https://github.com/awslabs/data-on-eks
+Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+Licensed under the Apache License, Version 2.0.
+Files: upstream/data-on-eks/
+The upstream LICENSE and NOTICE are reproduced in upstream/data-on-eks/.
+
+------------------------------------------------------------------------
+Original content
+
+The files under guides/ and the root-level README.md and PROVENANCE.md were
+written for this repository and are licensed under the Apache License,
+Version 2.0. guides/reference/crd-api-reference.md is a format conversion
+(HTML to Markdown) of upstream/starrocks-kubernetes-operator/doc/api.md.

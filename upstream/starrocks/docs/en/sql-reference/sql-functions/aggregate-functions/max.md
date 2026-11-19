@@ -1,0 +1,34 @@
+---
+displayed_sidebar: docs
+description: "Returns the maximum value of the expr expression."
+products: [oss, enterprise, cloud, anywhere]
+---
+
+# max
+
+
+
+Returns the maximum value of the expr expression.
+
+## Syntax
+
+```plaintext
+MAX(expr)
+```
+
+## Examples
+
+```plain text
+MySQL > select max(scan_rows)
+from log_statis
+group by datetime;
++------------------+
+| max(`scan_rows`) |
++------------------+
+|          4671587 |
++------------------+
+```
+
+## keyword
+
+MAX
